@@ -2,14 +2,14 @@
 
 ## Features
 
-Full TypeScript support!
+Scan user uploaded files for viruses using the [WebTender](https://webtender.host) [WebAV API](https://webav.io). Improve the security of your application by scanning files for viruses before they are served to your users.
 
-Endpoints:
 - Scan files by URL
 - Scan files by uploading
 - Query file status
 - Get recently scanned files
 
+TypeScript support!
 
 
 ## Installation
