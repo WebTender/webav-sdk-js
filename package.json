@@ -1,7 +1,7 @@
 {
   "name": "@webtender/webav-sdk-js",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "scripts": {
     "test": "vitest run",
@@ -9,16 +9,16 @@
     "build": "vite build",
     "dev": "vite build --watch"
   },
-  "main": "./dist/main.umd.cjs",
-  "module": "./dist/main.js",
+  "main": "./dist/@webtender/webav-sdk-js.umd.cjs",
+  "module": "./dist/@webtender/webav-sdk-js.js",
   "exports": {
     ".": {
-      "import": "./dist/main.js",
-      "require": "./dist/main.umd.cjs"
+      "import": "./dist/@webtender/webav-sdk-js.js",
+      "require": "./dist/@webtender/webav-sdk-js.umd.cjs"
     },
     "./webav": {
-      "import": "./dist/main.js",
-      "require": "./dist/main.umd.cjs"
+      "import": "./dist/@webtender/webav-sdk-js.js",
+      "require": "./dist/@webtender/webav-sdk-js.umd.cjs"
     }
   },
   "files": [

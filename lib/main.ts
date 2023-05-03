@@ -1,11 +1,11 @@
 import type { ReadStream } from "fs";
 
-export const SCAN_STATUS_PENDING = 0;
-export const SCAN_STATUS_PASSED = 1;
-export const SCAN_STATUS_VIRUS = 2;
-export const SCAN_STATUS_UNABLE = 3;
-export const SCAN_STATUS_SKIPPED = 4;
-export const SCAN_STATUS_LABELS = [
+export const VIRUS_STATUS_PENDING = 0;
+export const VIRUS_STATUS_PASSED = 1;
+export const VIRUS_STATUS_VIRUS = 2;
+export const VIRUS_STATUS_UNABLE = 3;
+export const VIRUS_STATUS_SKIPPED = 4;
+export const VIRUS_STATUS_LABELS = [
   "Pending",
   "Passed",
   "Virus",
@@ -13,21 +13,21 @@ export const SCAN_STATUS_LABELS = [
   "Skipped",
 ];
 
-export function getStatusLabel(status: ScanStatus) {
-  if (status < 0 || status > SCAN_STATUS_LABELS.length)
+export function getStatusLabel(status: VirusStatus) {
+  if (status < 0 || status > VIRUS_STATUS_LABELS.length)
     throw new Error("Invalid status: " + status);
 
-  return SCAN_STATUS_LABELS[status] as ScanStatusLabel;
+  return VIRUS_STATUS_LABELS[status] as VirusStatusLabel;
 }
 
-export type ScanStatus =
-  | typeof SCAN_STATUS_PENDING
-  | typeof SCAN_STATUS_PASSED
-  | typeof SCAN_STATUS_VIRUS
-  | typeof SCAN_STATUS_UNABLE
-  | typeof SCAN_STATUS_SKIPPED;
+export type VirusStatus =
+  | typeof VIRUS_STATUS_PENDING
+  | typeof VIRUS_STATUS_PASSED
+  | typeof VIRUS_STATUS_VIRUS
+  | typeof VIRUS_STATUS_UNABLE
+  | typeof VIRUS_STATUS_SKIPPED;
 
-export type ScanStatusLabel =
+export type VirusStatusLabel =
   | "Pending"
   | "Passed"
   | "Virus"
@@ -36,10 +36,20 @@ export type ScanStatusLabel =
 
 export interface FileStatus {
   id: string;
-  virus_status: ScanStatus;
-  virus_status_label: ScanStatusLabel;
+  virus_status: VirusStatus;
+  virus_status_label: VirusStatusLabel;
   updated_at: string;
   created_at: string;
+}
+
+export interface PaginatedFiles {
+  data: FileStatus[];
+  last_page: number;
+  per_page: number;
+  current_page: number;
+  to: null | number;
+  from: null | number;
+  total: number;
 }
 
 export function createWebAV(apiKey: null | string = null) {
@@ -81,6 +91,12 @@ export function createWebAV(apiKey: null | string = null) {
     return response as FileStatus;
   }
 
+  async function getStatus(jobId: string) {
+    const response = await sendRequest("GET", `webav/status/${jobId}`);
+
+    return response as FileStatus;
+  }
+
   return {
     setApiKey(key: string) {
       apiKey = key;
@@ -94,21 +110,36 @@ export function createWebAV(apiKey: null | string = null) {
     async getRecentStatuses() {
       const response = await sendRequest("GET", `webav/status`);
 
-      return response as {
-        data: FileStatus[];
-        last_page: number;
-        per_page: number;
-        current_page: number;
-        to: null | number;
-        from: null | number;
-        total: number;
-      };
+      return response as PaginatedFiles;
     },
 
-    async getStatus(jobId: string) {
-      const response = await sendRequest("GET", `webav/status/${jobId}`);
+    getStatus,
 
-      return response as FileStatus;
+    async waitFor(
+      jobId: string,
+      timeoutSeconds = 600,
+      pollIntervalSeconds = 0.1
+    ) {
+      const startTime = Date.now();
+      while (true) {
+        const status = await getStatus(jobId);
+
+        if (status.virus_status !== VIRUS_STATUS_PENDING) {
+          return status;
+        }
+
+        if (Date.now() - startTime > timeoutSeconds * 1000) {
+          throw new Error(
+            "Timeout waiting for file status after " +
+              timeoutSeconds +
+              " seconds"
+          );
+        }
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, pollIntervalSeconds * 1000)
+        );
+      }
     },
 
     scanByUpload,
