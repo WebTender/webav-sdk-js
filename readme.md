@@ -15,7 +15,7 @@ TypeScript support!
 ## Installation
 
 ```bash
-npm install @webtender/webav-sdk-js
+npm install --save @webtender/webav-sdk-js
 ```
 
 ```bash
