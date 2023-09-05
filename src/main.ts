@@ -58,34 +58,26 @@ export function createWebAV(apiKey: null | string = null) {
 
   // Public functions
   async function scanByUpload(
-    file: string | Blob | ReadStream | File,
+    file: string | Buffer | ReadStream | File,
     fileName: string
   ) {
-    let fileBlob: Blob;
+    let fileBuffer: Buffer;
 
     if (typeof file === "string") {
-      // If `file` is a string, assume it's a file path and read it using `FileReader`.
-      const fileReader = new FileReader();
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        fileReader.onload = () => resolve(fileReader.result as string);
-        fileReader.onerror = reject;
-        fileReader.readAsDataURL(new File([file], fileName));
-      });
-      fileBlob = await fetch(fileContent).then((res) => res.blob());
-    } else if (file instanceof Blob) {
-      fileBlob = file;
+      fileBuffer = Buffer.from(file, "base64");
+    } else if (file instanceof Buffer) {
+      fileBuffer = file;
     } else {
       // Probably `file` is a ReadStream, convert it to a Buffer and create a new Blob from it.
       const chunks: any[] = [];
       for await (const chunk of file as ReadStream) {
         chunks.push(chunk);
       }
-      const fileBuffer = Buffer.concat(chunks);
-      fileBlob = new Blob([fileBuffer]);
+      fileBuffer = Buffer.concat(chunks);
     }
 
     const formData = new FormData();
-    formData.append("file", fileBlob, fileName);
+    formData.append("file", new Blob([fileBuffer]), fileName);
     const response = await sendRequest("POST", `webav/scan`, formData);
 
     return response as FileStatus;
