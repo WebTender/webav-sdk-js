@@ -131,8 +131,8 @@ export function createWebAV(apiKey: null | string = null) {
         if (Date.now() - startTime > timeoutSeconds * 1000) {
           throw new Error(
             "Timeout waiting for file status after " +
-              timeoutSeconds +
-              " seconds"
+            timeoutSeconds +
+            " seconds"
           );
         }
 
@@ -173,17 +173,18 @@ export function createWebAV(apiKey: null | string = null) {
         await fetch(`${basePath}${uri}?${queryParams}`, {
           headers: {
             Accept: "application/json",
+            'X-WebTender-Api-Key': apiKey,
           },
         })
       ).json();
     } else if (method === "POST") {
       if (data instanceof FormData) {
-        data.append("api_key", apiKey);
         return await fetch(`${basePath}${uri}`, {
           method: "POST",
           body: data,
           headers: {
             Accept: "application/json",
+            'X-WebTender-Api-Key': apiKey,
           },
         }).then((response) => {
           if (response.status === 413) {
@@ -193,13 +194,12 @@ export function createWebAV(apiKey: null | string = null) {
         });
       }
 
-      data["api_key"] = apiKey;
-
       return await fetch(`${basePath}${uri}`, {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
           Accept: "application/json",
+          'X-WebTender-Api-Key': apiKey,
           "Content-Type": "application/json",
         },
       }).then((response) => response.json());

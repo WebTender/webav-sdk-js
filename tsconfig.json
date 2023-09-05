@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vitest/importMeta"]
+  },
+  "include": ["src/**/*", "vite.config.ts"],
+  "exclude": ["node_modules"]
+}

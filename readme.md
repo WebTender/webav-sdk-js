@@ -11,8 +11,18 @@ Scan user uploaded files for viruses using the [WebTender](https://webtender.hos
 
 TypeScript support!
 
+## Asynchronous Scanning
+
+Compatible with light weight Node.js servers with limited memory.
+
+This package simply implements the [WebAV REST API](https://webtender.host/api/webav.html#rest-api), making it very light weight and easy to get scanning today.
+
+Learn more here: [WebAV API Docs](https://webtender.host/api/webav.html#rest-api)
+
 
 ## Installation
+
+Pick your poison:
 
 ```bash
 npm install --save @webtender/webav-sdk-js
@@ -26,6 +36,10 @@ pnpm install @webtender/webav-sdk-js
 yarn add @webtender/webav-sdk-js
 ```
 
+```bash
+bun add @webtender/webav-sdk-js
+```
+
 ## Get your API Key
 
 You can get your API key from the [WebTender Console](https://console.webtender.host)
@@ -37,49 +51,39 @@ You can get your API key from the [WebTender Console](https://console.webtender.
 ```typescript
 import { createWebAV, VIRUS_STATUS_PENDING } from '@webtender/webav-sdk-js';
 
-(async () => {
-  const av = createWebAV(process.env.WEB_TENDER_API_KEY);
+// ...
+const av = createWebAV(process.env.WEB_TENDER_API_KEY);
 
-  // You can scan by a public URL, e.g. a signed S3 url.
-  const queuedFile = await av.scanByUrl("https://link.testfile.org/15MB");
+// You can scan by a public URL, or a signed S3 url.
+const queuedFile = await av.scanByUrl("https://link.testfile.org/15MB");
 
-  // The file is queued, it will be scanned asynchronously.
-  // You can expect most files to be ready in a few seconds.
+// Or via upload (limited to 100MB)
+const fileName = "testfile.txt";
+const fileStream = fs.createReadStream(fileName);
+const queuedFile = await av.scanByUpload(fileStream, fileName);
+```
+
+You can subscribe to a webhook via the WebTender Console
+to get notified when the file is ready.
+
+Or after some time you can query the status of the file
+
+```ts
+const fileStatus = await av.getStatus(queuedFile.id);
+
+// Or await the result, this may take several minutes for large files
+const scanResult = await av.waitFor(queuedFile.id);
+console.log(scanResult.virus_status_label); // Hopefully => "Passed"
+
+// Get recently scanned files
+const paginatedFiles = await av.getRecentStatuses();
+for (const fileStatus of paginatedFiles.data) {
   console.log(
-    queuedFile.id, // UUID
-    queuedFile.virus_status_label, // Label status as a string ("Pending")
-    queuedFile.virus_status // Integer status code (0 => VIRUS_STATUS_PENDING)
+    fileStatus.id,
+    fileStatus.virus_status_label,
+    fileStatus.virus_status
   );
-
-  // You can subscribe to a webhook via the WebTender Console
-  // to get notified when the file is ready
-  // ...
-  // Or, after some time you can query the status of the file
-  const fileStatus = await av.getStatus(queuedFile.id);
-
-  // Or await the result, this may take several minutes for large files
-  const scanResult = await av.waitFor(queuedFile.id);
-  console.log(scanResult.virus_status_label); // Hopefully => "Passed"
-
-  // Get recently scanned files
-  const paginatedFiles = await av.getRecentStatuses();
-  for (const fileStatus of paginatedFiles.data) {
-    console.log(
-      fileStatus.id,
-      fileStatus.virus_status_label,
-      fileStatus.virus_status
-    );
-  }
-
-  /*
-  PaginatedFiles contains the following properties:
-    data: FileStatus[];
-    last_page: number;
-    per_page: number;
-    current_page: number;
-    total: number;
-  */
-})();
+}
 ```
 
 ## Security Notice

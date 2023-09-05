@@ -28,6 +28,7 @@ describe("WebAV SDK JS - main.ts", () => {
   it("Can get recent statuses", async () => {
     const av = createWebAV();
     av.setApiKey("fake-123");
+    // @ts-ignore
     fetch.mockResolvedValue(
       createFetchResponse(200, {
         data: [],
