@@ -12,7 +12,7 @@ export default defineConfig({
       entry: resolve(__dirname, "src/main.ts"),
       name: "WebAV SDK JS",
       // the proper extensions will be added
-      fileName: "@webtender/webav-sdk-js",
+      fileName: "webav-sdk-js",
     },
     rollupOptions: {},
   },
