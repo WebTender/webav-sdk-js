@@ -19,7 +19,6 @@ This package simply implements the [WebAV REST API](https://webtender.host/api/w
 
 Learn more here: [WebAV API Docs](https://webtender.host/api/webav.html#rest-api)
 
-
 ## Installation
 
 Pick your poison:
@@ -48,11 +47,36 @@ You can get your API key from the [WebTender Console](https://console.webtender.
 
 ## Usage
 
-```typescript
-import { createWebAV, VIRUS_STATUS_PENDING } from '@webtender/webav-sdk-js';
+The client will automatically look for a process.env variables to get the API key and secret.
 
-// ...
-const av = createWebAV(process.env.WEB_TENDER_API_KEY);
+You can place these in a .env and use the `dotenv` package.
+```env
+WEBTENDER_API_KEY=your-api-key
+WEBTENDER_API_SECRET=your-api-secret
+```
+
+Simply construct with no arguments to use the environment variables.
+```js
+import WebAV from '@webtender/webav-sdk-js';
+import dotenv from 'dotenv';
+
+// Load .env
+dotenv.config();
+
+const av = new WebAV();
+```
+
+Alternatively use the constructor to pass the API key and secret.
+No need for `dotenv` in this case.
+
+```js
+import WebAV from '@webtender/webav-sdk-js';
+
+const av = new WebAV('your-api-key', 'your-api-secret');
+```
+
+```typescript
+const av = new WebAV();
 
 // You can scan by a public URL, or a signed S3 url.
 const queuedFile = await av.scanByUrl("https://link.testfile.org/15MB");

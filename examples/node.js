@@ -1,9 +1,9 @@
-import { createWebAV, VIRUS_STATUS_PENDING } from "@webtender/webav-sdk-js";
+import WebAV from "@webtender/webav-sdk-js";
 import dotenv from "dotenv";
 dotenv.config();
 
 (async () => {
-  const av = createWebAV(process.env.WEB_TENDER_API_KEY);
+  const av = new WebAV();
 
   // You can scan by a public URL, e.g. a signed S3 url.
   const queuedFile = await av.scanByUrl("https://link.testfile.org/15MB");
@@ -17,7 +17,7 @@ dotenv.config();
   );
 
   // You can subscribe to a webhook via the WebTender Console
-  // to get notified when the file is ready
+  // to get notified when a file is ready
   // ...
   // Or, after some time you can query the status of the file
   const fileStatus = await av.getStatus(queuedFile.id);

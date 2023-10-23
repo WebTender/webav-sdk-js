@@ -1,3 +1,4 @@
+import WebTenderClient from '@webtender/api-client-node';
 import type { ReadStream } from "fs";
 
 export const VIRUS_STATUS_PENDING = 0;
@@ -52,15 +53,23 @@ export interface PaginatedFiles {
   total: number;
 }
 
-export function createWebAV(apiKey: null | string = null) {
-  // Private variables
-  let basePath = "https://api.webtender.host/api/";
+export default class WebAV {
+  private client: WebTenderClient;
 
-  // Public functions
-  async function scanByUpload(
-    file: string | Buffer | ReadStream | File,
-    fileName: string
-  ) {
+  constructor(apiKey?: string, apiSecret?: string) {
+    this.client = new WebTenderClient(apiKey, apiSecret);
+  }
+
+  setApiKey(key: string, secret: string) {
+    this.client.setApiKey(key);
+    this.client.setApiSecret(secret);
+  }
+
+  setBasePath(path: string) {
+    this.client.setBaseUrl(path);
+  }
+
+  async scanByUpload(file: string | Buffer | ReadStream | File, fileName: string): Promise<FileStatus> {
     let fileBuffer: Buffer;
 
     if (typeof file === "string") {
@@ -78,125 +87,52 @@ export function createWebAV(apiKey: null | string = null) {
 
     const formData = new FormData();
     formData.append("file", new Blob([fileBuffer]), fileName);
-    const response = await sendRequest("POST", `webav/scan`, formData);
+    const request = await this.client.post(`webav/scan`, formData);
 
-    return response as FileStatus;
+    return await request.json();
   }
 
-  async function getStatus(jobId: string) {
-    const response = await sendRequest("GET", `webav/status/${jobId}`);
-
-    return response as FileStatus;
+  async getStatus(jobId: string): Promise<FileStatus> {
+    const request = await this.client.get(`webav/status/${jobId}`);
+    return request.json();
   }
 
-  return {
-    setApiKey(key: string) {
-      apiKey = key;
-    },
+  async getRecentStatuses(): Promise<PaginatedFiles> {
+    const request = await this.client.get(`webav/status`);
+    return request.json();
+  }
 
-    setBasePath(path: string) {
-      // Ensure trailing slash
-      basePath = path.replace(/\/+$/, "") + "/";
-    },
+  async waitFor(jobId: string, timeoutSeconds = 600, pollIntervalSeconds = 0.1): Promise<FileStatus> {
+    const startTime = Date.now();
+    while (true) {
+      const status = await this.getStatus(jobId);
 
-    async getRecentStatuses() {
-      const response = await sendRequest("GET", `webav/status`);
+      if (status.virus_status !== VIRUS_STATUS_PENDING) {
+        return status;
+      }
 
-      return response as PaginatedFiles;
-    },
-
-    getStatus,
-
-    async waitFor(
-      jobId: string,
-      timeoutSeconds = 600,
-      pollIntervalSeconds = 0.1
-    ) {
-      const startTime = Date.now();
-      while (true) {
-        const status = await getStatus(jobId);
-
-        if (status.virus_status !== VIRUS_STATUS_PENDING) {
-          return status;
-        }
-
-        if (Date.now() - startTime > timeoutSeconds * 1000) {
-          throw new Error(
-            "Timeout waiting for file status after " +
-            timeoutSeconds +
-            " seconds"
-          );
-        }
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, pollIntervalSeconds * 1000)
+      if (Date.now() - startTime > timeoutSeconds * 1000) {
+        throw new Error(
+          "Timeout waiting for file status after " +
+          timeoutSeconds +
+          " seconds"
         );
       }
-    },
 
-    scanByUpload,
-    async scanByUrl(fileUrl: string) {
-      const response = await sendRequest("POST", `webav/scan`, {
-        file_url: fileUrl,
-      });
-      return response as FileStatus;
-    },
-  };
-
-  // Private functions
-  async function sendRequest(
-    method: "GET" | "POST",
-    uri: string,
-    data: Record<string, any> | FormData = {}
-  ) {
-    if (!apiKey) throw new Error("API key is not set");
-
-    if (method === "GET") {
-      if (data instanceof FormData) {
-        throw new Error("GET requests cannot have FormData");
-      }
-
-      const queryParams = new URLSearchParams({
-        ...data,
-        api_key: apiKey,
-      });
-
-      return (
-        await fetch(`${basePath}${uri}?${queryParams}`, {
-          headers: {
-            Accept: "application/json",
-            'X-WebTender-Api-Key': apiKey,
-          },
-        })
-      ).json();
-    } else if (method === "POST") {
-      if (data instanceof FormData) {
-        return await fetch(`${basePath}${uri}`, {
-          method: "POST",
-          body: data,
-          headers: {
-            Accept: "application/json",
-            'X-WebTender-Api-Key': apiKey,
-          },
-        }).then((response) => {
-          if (response.status === 413) {
-            throw new Error("File is too large");
-          }
-          return response.json();
-        });
-      }
-
-      return await fetch(`${basePath}${uri}`, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          Accept: "application/json",
-          'X-WebTender-Api-Key': apiKey,
-          "Content-Type": "application/json",
-        },
-      }).then((response) => response.json());
+      await new Promise((resolve) =>
+        setTimeout(resolve, pollIntervalSeconds * 1000)
+      );
     }
-
-    throw new Error("Invalid method: " + method);
   }
+
+  async scanByUrl(fileUrl: string): Promise<FileStatus> {
+    const response = await this.client.post(`webav/scan`, {
+      file_url: fileUrl,
+    });
+    return await response.json();
+  }
+}
+
+export function createWebAV(apiKey?: string, apiSecret?: string) {
+  return new WebAV(apiKey, apiSecret);
 }
