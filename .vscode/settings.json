@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["webav"]
+  "cSpell.words": ["webav"],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

@@ -69,24 +69,18 @@ export default class WebAV {
     this.client.setBaseUrl(path);
   }
 
-  async scanByUpload(file: string | Buffer | ReadStream | File, fileName: string): Promise<FileStatus> {
-    let fileBuffer: Buffer;
-
+  async scanByUpload(file: string | Buffer | ReadStream | File, fileName: string, mimeType?: string): Promise<FileStatus> {
+    let blob = new Blob();
     if (typeof file === "string") {
-      fileBuffer = Buffer.from(file, "base64");
+      blob = new Blob([Buffer.from(file, "base64")], { type: mimeType });
     } else if (file instanceof Buffer) {
-      fileBuffer = file;
+      blob = new Blob([file], { type: mimeType });
     } else {
-      // Probably `file` is a ReadStream, convert it to a Buffer and create a new Blob from it.
-      const chunks: any[] = [];
-      for await (const chunk of file as ReadStream) {
-        chunks.push(chunk);
-      }
-      fileBuffer = Buffer.concat(chunks);
+      blob = await streamToBlob(file as ReadStream, mimeType);
     }
 
     const formData = new FormData();
-    formData.append("file", new Blob([fileBuffer]), fileName);
+    formData.append("file", blob, fileName);
     const request = await this.client.post(`webav/scan`, formData);
 
     return await request.json();
@@ -135,4 +129,22 @@ export default class WebAV {
 
 export function createWebAV(apiKey?: string, apiSecret?: string) {
   return new WebAV(apiKey, apiSecret);
+}
+
+function streamToBlob(stream: ReadStream, mimeType?: string) {
+  if (mimeType !== undefined && typeof mimeType !== 'string') {
+    throw new Error('Invalid mimetype, expected string or undefined')
+  }
+  return new Promise<Blob>((resolve, reject) => {
+    const chunks = []
+    stream
+      .on('data', chunk => chunks.push(chunk))
+      .once('end', () => {
+        const blob = mimeType !== undefined
+          ? new Blob(chunks, { type: mimeType })
+          : new Blob(chunks)
+        resolve(blob)
+      })
+      .once('error', reject)
+  })
 }
