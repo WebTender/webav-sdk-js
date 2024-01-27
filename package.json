@@ -1,7 +1,7 @@
 {
   "name": "@webtender/webav-sdk-js",
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Web Anti-Virus SDK for JavaScript Backends. Powered by WebTender.host",
   "homepage": "https://webav.io",
   "scripts": {
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.18.6",
-    "@webtender/api-client-node": "^0.3.0",
+    "@webtender/api-client-node": "^0.3.3",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
     "vitest": "^0.30.1"

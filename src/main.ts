@@ -91,8 +91,8 @@ export default class WebAV {
     return request.json();
   }
 
-  async getRecentStatuses(): Promise<PaginatedFiles> {
-    const request = await this.client.get(`webav/status`);
+  async getRecentStatuses(page?: number): Promise<PaginatedFiles> {
+    const request = await this.client.get(`webav/status`, { page });
     return request.json();
   }
 

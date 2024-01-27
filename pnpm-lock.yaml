@@ -14,8 +14,8 @@ devDependencies:
     specifier: ^18.18.6
     version: 18.18.6
   '@webtender/api-client-node':
-    specifier: ^0.3.0
-    version: 0.3.0
+    specifier: ^0.3.3
+    version: 0.3.3
   tsup:
     specifier: ^7.2.0
     version: 7.2.0(typescript@5.2.2)
@@ -330,8 +330,8 @@ packages:
       pretty-format: 27.5.1
     dev: true
 
-  /@webtender/api-client-node@0.3.0:
-    resolution: {integrity: sha512-BM00xZyzIr9A9l9vUpPou0oAnxtNbbw5Y6GlitJCs7B05nFWY8HOw6X5nb0YvIR/I4tvNLBoNKPkhZYYWxnEyQ==}
+  /@webtender/api-client-node@0.3.3:
+    resolution: {integrity: sha512-jUphEoXLuZ59vRoL37tSrdYmcWMK9y+c42zZHqVmTgEu4XynvU6/nQVzR9W2SJNCDyc22KZsCe5e5tiG/TZFSw==}
     optionalDependencies:
       dotenv: 16.3.1
     dev: true
