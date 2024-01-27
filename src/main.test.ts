@@ -23,7 +23,7 @@ describe("WebAV SDK JS - main.ts", () => {
     it("Mock - Can get recent statuses", async () => {
       const av = createWebAV();
       av.setApiKey("fake-123", 'fake-secret');
-      // @ts-ignore
+      // @ts-expect-error - mocking TS is hard, who cares
       fetch.mockResolvedValue(
         createFetchResponse(200, {
           data: [],
